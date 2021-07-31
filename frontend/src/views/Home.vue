@@ -1,39 +1,99 @@
 <template>
   <div class="editor-wrapper">
     <div class="editor" ref="editorRef"></div>
-    <div class="helper">
-      <h3 class="title">OUNG Helper</h3>
-      <hr class="divider" />
-      <div class="buttons">
-        <button
-          class="button"
-          v-for="key in Object.keys(oungHelpers)"
-          @click="appendToEditor(oungHelpers[key])"
-        >
-          {{ key }}
-        </button>
+    <div class="terminal-background">
+      <div class="terminal-wrapper">
+        <div class="terminal" ref="terminalRef"></div>
       </div>
     </div>
   </div>
+  <div class="open-keyboard" @click="toggleKeyboard()">
+    <span class="mdi mdi-keyboard"></span>
+  </div>
+  <keyboard
+    :opened="keyboardOpened"
+    :onClose="toggleKeyboard"
+    :onPress="onKeyboardPress"
+  />
 </template>
 
 <script>
 import * as monaco from 'monaco-editor';
 import { ref } from '@vue/reactivity';
-import { onMounted } from '@vue/runtime-core';
-import oungHelpers from '@/oung_editor/helpers';
+import { onBeforeUnmount, onMounted } from '@vue/runtime-core';
+import keyboard from '@/components/Keyboard.vue';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+
+import 'xterm/css/xterm.css';
 
 export default {
+  components: { keyboard },
   setup() {
     const editorRef = ref(null);
+    const terminalRef = ref(null);
+    const keyboardOpened = ref(false);
+
     let editor = null;
 
+    const termPrompt = '/ounglang $ ';
+    let cmd = '';
+    const term = new Terminal({
+      lineHeight: 1.5,
+    });
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+
     onMounted(() => {
+      term.open(terminalRef.value);
+      fitAddon.fit();
+
+      term.prompt = function () {
+        term.writeln('\r\n' + termPrompt);
+      };
+
+      term.setOption('cursorBlink', true);
+      term.writeln('────────────────────────────────────────────');
+      term.writeln('                                            ');
+      term.writeln('          🔥 Welcome to ounglang 🔥         ');
+      term.writeln('    👉  Type "run" to run the program 👈   ');
+      term.writeln('  👉  Type "clear" to clear the console 👈 ');
+      term.writeln('                                            ');
+      term.writeln('────────────────────────────────────────────');
+      term.prompt();
+
+      term.onKey((e) => {
+        if (e.domEvent.code == 'Enter') {
+          runCommand();
+        } else if (e.domEvent.code == 'Backspace') {
+          cmd = cmd.substring(0, cmd.length - 1);
+          term.write('\b \b');
+        }
+      });
+
+      term.onData((data) => {
+        cmd += data;
+        term.write(data);
+      });
+
+      const runCommand = () => {
+        term.write('\r\n');
+        if (/clear/.test(cmd)) {
+          term.clear();
+        } else if (/run/.test(cmd)) {
+          term.writeln('running oung...');
+          term.writeln(editor.getValue());
+        }
+        cmd = '';
+        term.prompt();
+      };
+
       editor = monaco.editor.create(editorRef.value, {
         language: 'oung',
         glyphMargin: 0,
         theme: 'oung',
         wordWrap: true,
+        fontSize: 20,
       });
 
       editor.onDidChangeCursorPosition((e) => {
@@ -45,6 +105,10 @@ export default {
           console.log('this is oung sound');
         }
       });
+    });
+
+    onBeforeUnmount(() => {
+      editor.dispose();
     });
 
     const getCharactorBeforeCursor = (line, column) => {
@@ -77,7 +141,21 @@ export default {
       editor.focus();
     };
 
-    return { editorRef, oungHelpers, appendToEditor };
+    const toggleKeyboard = () => {
+      keyboardOpened.value = !keyboardOpened.value;
+    };
+
+    const onKeyboardPress = (key) => {
+      appendToEditor(key);
+    };
+
+    return {
+      editorRef,
+      terminalRef,
+      keyboardOpened,
+      toggleKeyboard,
+      onKeyboardPress,
+    };
   },
 };
 </script>
@@ -87,7 +165,7 @@ $helperWidth: 350px;
 
 .editor-wrapper {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   background-color: #1e1e1e;
@@ -95,44 +173,37 @@ $helperWidth: 350px;
 }
 .editor {
   flex-grow: 1;
+  width: 100%;
   height: 100%;
 }
-.helper {
+.open-keyboard {
+  position: fixed;
   display: flex;
-  flex-direction: column;
-  padding: 16px;
-  min-width: $helperWidth !important;
-  overflow: hidden auto;
-  .title {
-    margin: 0;
-    color: white;
-    font-weight: bold;
-    letter-spacing: 5px;
-  }
-  .buttons {
-    margin-top: 5px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 16px;
-    .button {
-      outline: none;
-      border: none;
-      height: 40px;
-      font-size: 18px;
-      font-weight: bold;
-      user-select: none;
-      background-color: #353535;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      &:active {
-        transform: scale(0.9);
-      }
-      &:hover {
-        background-color: #505050;
-      }
-    }
-  }
+  justify-content: center;
+  align-items: center;
+  bottom: 370px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 100%;
+  font-size: 30px;
+  background-color: #e5e5e5;
+  cursor: pointer;
+}
+.terminal-background {
+  width: 100%;
+  min-height: 350px;
+  max-height: 350px;
+  background-color: black;
+}
+.terminal-wrapper {
+  position: relative;
+  padding: 10px 10px 10px 10px;
+  width: 100%;
+  height: 100%;
+}
+.terminal {
+  width: 100%;
+  height: 100%;
 }
 </style>

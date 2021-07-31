@@ -203,6 +203,9 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
             }
         }
 
+        printf("%s\n", id);
+        // traverse_forward();
+
         struct variable_t* var = get_variable(id);
         if (var == NULL) {
             perror("Could not find the variable! "
