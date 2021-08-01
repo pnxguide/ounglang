@@ -21,9 +21,9 @@ func main() {
   	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",//"https://oung-editor.vercel.app",
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH",
+		AllowOrigins: "https://oung-editor.vercel.app, https://oung-editor.vercel.app/editor",
+		AllowHeaders: "Access-Control-Allow-Origin, Origin, Content-Type, Accept",
+
 	}))
 
 	app.Post("/run", func (c *fiber.Ctx) error {
@@ -43,7 +43,7 @@ func main() {
 
 		log.Println(filename)
 
-		cmd := exec.Command("/home/ec2-user/oung", filename)
+		cmd := exec.Command("./oung", filename)
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			return err
@@ -66,5 +66,6 @@ func main() {
 		return c.SendString(string(result))
 	})
 
-	log.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	log.Fatal(app.Listen(":"+port))
 }
