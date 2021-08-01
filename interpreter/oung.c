@@ -174,7 +174,7 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mo
             id_len++;
         }
 
-        char id[id_len];
+        char id[id_len+1];
 
         for (int i = 0; i < id_len; i++) {
             for (int j = 0; j < 8; j++) {
@@ -192,6 +192,8 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mo
                 }
             }
         }
+
+        id[id_len] = 0x0;
 
         struct variable_t* var = get_variable(id);
         if (var == NULL) {
@@ -379,7 +381,7 @@ int oung_init_var(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
             id_len++;
         }
 
-        char id[id_len];
+        char id[id_len+1];
 
         for (int i = 0; i < id_len; i++) {
             for (int j = 0; j < 8; j++) {
@@ -396,6 +398,8 @@ int oung_init_var(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                 }
             }
         }
+
+        id[id_len] = 0x0;
 
         char value = 0;
         for (int i = id_len*8+2; i < limit; i++) {
@@ -433,7 +437,7 @@ int oung_input(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
             id_len++;
         }
 
-        char id[id_len];
+        char id[id_len+1];
 
         for (int i = 0; i < id_len; i++) {
             for (int j = 0; j < 8; j++) {
@@ -450,6 +454,8 @@ int oung_input(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                 }
             }
         }
+
+        id[id_len] = 0x0;
 
         status_code = allocate_var(id, id_len, input);
     }
@@ -470,7 +476,7 @@ int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mod
             id_len++;
         }
 
-        char l_operand[id_len];
+        char l_operand[id_len+1];
 
         for (int i = 0; i < id_len; i++) {
             for (int j = 0; j < 8; j++) {
@@ -488,6 +494,8 @@ int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mod
             }
         }
 
+        l_operand[id_len] = 0x0;
+
         char r_value = 0;
 
         if (cmd[id_len*8+2] != SEP) {
@@ -504,7 +512,7 @@ int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mod
                 r_id_len++;
             }
 
-            char r_operand[r_id_len];
+            char r_operand[r_id_len+1];
 
             for (int i = 0; i < r_id_len; i++) {
                 for (int j = 0; j < 8; j++) {
@@ -521,6 +529,8 @@ int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mod
                     }
                 }
             }
+
+            r_operand[r_id_len] = 0x0;
 
             r_value = get_variable(r_operand)->value;
             status_code = deallocate_var(r_operand);
@@ -554,6 +564,10 @@ int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mod
                 l_var->value *= r_value;
                 break;
             case DIV:
+                if (r_value == 0) {
+                    status_code = BAD;
+                    break;
+                }
                 l_var->value /= r_value;
                 break;
             case AND:
