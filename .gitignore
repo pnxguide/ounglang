@@ -2,4 +2,6 @@
 /interpreter/oung
 /interpreter/oung-gcc
 /.vscode
+
+/interpreter/*.exe
 /interpreter/examples/tmp.oung
