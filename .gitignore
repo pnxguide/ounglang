@@ -6,4 +6,4 @@
 /interpreter/*.exe
 /interpreter/examples/tmp.oung
 
-/.DS_Store
+.DS_Store
