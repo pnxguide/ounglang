@@ -89,13 +89,13 @@ export default {
           const params = cmd.split(' ');
           try {
             const { data } = await axios.post(
-              'ec2-3-142-147-86.us-east-2.compute.amazonaws.com:3000/run',
+              'http://ec2-3-142-147-86.us-east-2.compute.amazonaws.com:3000/run',
               {
-                program: editor.getValue(),
+                program: editor.getValue().replaceAll(/\n|\r/g, '\n'),
                 input: params.splice(1).join(' '),
               },
             );
-            term.writeln(data);
+            term.writeln(data.toString());
           } catch (e) {
             term.writeln('⚠ something went wrong. ⚠');
           }
