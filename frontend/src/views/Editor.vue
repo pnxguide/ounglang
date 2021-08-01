@@ -89,7 +89,7 @@ export default {
           const params = cmd.split(' ');
           try {
             const { data } = await axios.post(
-              'https://ounglang-api.herokuapp.com/run',
+              'https://ounglang-interpreter.herokuapp.com/run',
               {
                 program: editor.getValue().replaceAll(/\n|\r/g, '\n'),
                 input: params.splice(1).join(' '),
