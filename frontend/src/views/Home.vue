@@ -1,209 +1,193 @@
 <template>
-  <div class="editor-wrapper">
-    <div class="editor" ref="editorRef"></div>
-    <div class="terminal-background">
-      <div class="terminal-wrapper">
-        <div class="terminal" ref="terminalRef"></div>
+  <div class="wrapper">
+    <div class="wrapper-cover"></div>
+    <div class="header-wrapper">
+      <img
+        src="@/assets/images/logo.png"
+        alt="ounglang, oung oung oung, what is oung"
+        class="oung-logo"
+      />
+      <button class="open-editor-button" @click="goToEditor">
+        <span
+          class="mdi mdi-play-circle"
+          style="font-size: 30px; margin-right: 10px"
+        ></span
+        >&nbsp;Open Editor
+      </button>
+    </div>
+    <div class="about-wrapper">
+      <div class="about-content">
+        <p style="margin: 0">
+          oung OUNG OUNG OUNG oung OUNG OUNG OUNG oung OUNG OUNG oung oung OUNG
+          oung OUNG oung OUNG OUNG oung OUNG OUNG oung oung oung OUNG OUNG oung
+          oung oung OUNG OUNG oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung OUNG
+          OUNG oung OUNG OUNG oung OUNG oung OUNG OUNG oung oung OUNG oung OUNG
+          oung oung OUNG oung oung oung oung oung oung OUNG OUNG OUNG oung OUNG
+          oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung oung OUNG oung
+          oung oung oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung OUNG
+          OUNG OUNG oung OUNG oung OUNG oung OUNG OUNG oung OUNG OUNG OUNG oung
+          oung OUNG OUNG oung oung OUNG OUNG OUNG oung OUNG OUNG oung OUNG OUNG
+          oung oung oung OUNG OUNG oung oung oung oung OUNG oung OUNG OUNG oung
+          OUNG OUNG OUNG oung oung OUNG OUNG oung oung OUNG OUNG OUNG oung oung
+          OUNG oung oung oung oung OUNG oung oung oung oung OUNG OUNG oung OUNG
+          oung OUNG OUNG oung OUNG OUNG oung oung oung OUNG OUNG oung oung OUNG
+          oung OUNG oung OUNG OUNG OUNG oung OUNG oung oung oung oung OUNG oung
+          oung OUNG OUNG OUNG oung OUNG OUNG OUNG oung oung OUNG OUNG oung oung
+          OUNG oung oung oung oung oung oung OUNG OUNG oung oung OUNG OUNG OUNG
+          oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung oung OUNG oung oung oung
+          oung oung oung OUNG OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung
+          OUNG OUNG OUNG OUNG oung oung OUNG oung oung oung oung oung oung OUNG
+          OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung OUNG oung oung oung
+          oung OUNG OUNG oung oung OUNG oung OUNG oung oung OUNG oung oung oung
+          oung oung oung OUNG OUNG oung oung OUNG oung OUNG oung OUNG OUNG oung
+          oung OUNG oung oung oung OUNG OUNG oung OUNG oung oung OUNG oung OUNG
+          OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG
+          oung OUNG OUNG OUNG oung oung OUNG OUNG oung oung OUNG oung oung oung
+          oung OUNG
+        </p>
       </div>
     </div>
   </div>
-  <div class="open-keyboard" @click="toggleKeyboard()">
-    <span class="mdi mdi-keyboard"></span>
-  </div>
-  <keyboard
-    :opened="keyboardOpened"
-    :onClose="toggleKeyboard"
-    :onPress="onKeyboardPress"
-  />
 </template>
 
 <script>
-import * as monaco from 'monaco-editor';
-import { ref } from '@vue/reactivity';
+import router from '@/router';
+import audio from '@/assets/audios/home.mp3';
 import { onBeforeUnmount, onMounted } from '@vue/runtime-core';
-import keyboard from '@/components/Keyboard.vue';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-
-import 'xterm/css/xterm.css';
 
 export default {
-  components: { keyboard },
-  setup() {
-    const editorRef = ref(null);
-    const terminalRef = ref(null);
-    const keyboardOpened = ref(false);
+  setup(props, context) {
+    const goToEditor = () => {
+      router.push('/editor');
+    };
+    const player = new Audio(audio);
+    player.volume = 0.1;
+    player.playbackRate = 2;
+    player.loop = true;
+    player.currentTime = 11;
 
-    let editor = null;
+    const playAudio = (e) => {
+      if (player.paused) player.play();
+    };
 
-    const termPrompt = '/ounglang $ ';
-    let cmd = '';
-    const term = new Terminal({
-      lineHeight: 1.5,
-    });
-    const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
+    player.ontimeupdate = (e) => {
+      if (player.currentTime >= 16) {
+        player.currentTime = 11;
+      }
+    };
 
     onMounted(() => {
-      term.open(terminalRef.value);
-      fitAddon.fit();
-
-      term.prompt = function () {
-        term.writeln('\r\n' + termPrompt);
-      };
-
-      term.setOption('cursorBlink', true);
-      term.writeln('────────────────────────────────────────────');
-      term.writeln('                                            ');
-      term.writeln('          🔥 Welcome to ounglang 🔥         ');
-      term.writeln('    👉  Type "run" to run the program 👈   ');
-      term.writeln('  👉  Type "clear" to clear the console 👈 ');
-      term.writeln('                                            ');
-      term.writeln('────────────────────────────────────────────');
-      term.prompt();
-
-      term.onKey((e) => {
-        if (e.domEvent.code == 'Enter') {
-          runCommand();
-        } else if (e.domEvent.code == 'Backspace') {
-          cmd = cmd.substring(0, cmd.length - 1);
-          term.write('\b \b');
-        }
-      });
-
-      term.onData((data) => {
-        cmd += data;
-        term.write(data);
-      });
-
-      const runCommand = () => {
-        term.write('\r\n');
-        if (/clear/.test(cmd)) {
-          term.clear();
-        } else if (/run/.test(cmd)) {
-          term.writeln('running oung...');
-          term.writeln(editor.getValue());
-        }
-        cmd = '';
-        term.prompt();
-      };
-
-      editor = monaco.editor.create(editorRef.value, {
-        language: 'oung',
-        glyphMargin: 0,
-        theme: 'oung',
-        wordWrap: true,
-        fontSize: 20,
-      });
-
-      editor.onDidChangeCursorPosition((e) => {
-        const prefix = getCharactorBeforeCursor(
-          e.position.lineNumber,
-          e.position.column,
-        );
-        if (prefix == 'oung') {
-          console.log('this is oung sound');
-        }
-      });
+      document.addEventListener('mousemove', playAudio);
     });
 
     onBeforeUnmount(() => {
-      editor.dispose();
+      player.pause();
+      document.removeEventListener('mousemove', playAudio);
     });
 
-    const getCharactorBeforeCursor = (line, column) => {
-      const text = editor.getValue().split('\n')[line - 1].toLowerCase();
-      if (column < 5) {
-        return '';
-      }
-      return text.substr(column - 5, 4);
-    };
-
-    const numberToBinary = (number) => {
-      return `00000000${number.toString(2)}`.substr(-8);
-    };
-
-    const binaryToOung = (binary) => {
-      return binary
-        .toString()
-        .split('')
-        .map((e) => {
-          if (e == 0) return 'oung';
-          return 'OUNG';
-        })
-        .join(' ');
-    };
-
-    const appendToEditor = (number) => {
-      editor.trigger('keyboard', 'type', {
-        text: binaryToOung(numberToBinary(number)),
-      });
-      editor.focus();
-    };
-
-    const toggleKeyboard = () => {
-      keyboardOpened.value = !keyboardOpened.value;
-    };
-
-    const onKeyboardPress = (key) => {
-      appendToEditor(key);
-    };
-
-    return {
-      editorRef,
-      terminalRef,
-      keyboardOpened,
-      toggleKeyboard,
-      onKeyboardPress,
-    };
+    return { goToEditor };
   },
 };
 </script>
 
 <style lang="scss" scoped>
-$helperWidth: 350px;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
 
-.editor-wrapper {
+.wrapper {
+  font-family: 'Poppins', sans-serif;
+
+  position: relative;
   display: flex;
   flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-  background-color: #1e1e1e;
-  overflow: hidden;
-}
-.editor {
-  flex-grow: 1;
-  width: 100%;
-  height: 100%;
-}
-.open-keyboard {
-  position: fixed;
-  display: flex;
-  justify-content: center;
   align-items: center;
-  bottom: 370px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  border-radius: 100%;
-  font-size: 30px;
-  background-color: #e5e5e5;
-  cursor: pointer;
-}
-.terminal-background {
   width: 100%;
-  min-height: 350px;
-  max-height: 350px;
-  background-color: black;
+  min-height: 100vh;
+  background-image: linear-gradient(to bottom right, #a8a8a8, #8a8a8a);
+  background-size: 500px 500px;
+  background-attachment: fixed;
+  animation: animateBackground 5s linear infinite;
+  .wrapper-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    & ~ * {
+      position: relative;
+    }
+  }
 }
-.terminal-wrapper {
-  position: relative;
-  padding: 10px 10px 10px 10px;
-  width: 100%;
-  height: 100%;
+
+@keyframes animateBackground {
+  to {
+    background-position: 500px 500px;
+  }
 }
-.terminal {
+
+.header-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(80vh);
+  .open-editor-button {
+    font-family: 'Poppins', sans-serif;
+
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    margin-bottom: 50px;
+    padding: 10px 40px;
+    max-width: 300px;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    outline: none;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 black;
+    background-color: #0db030;
+    cursor: pointer;
+    &:active {
+      transform: translate(5px, 5px);
+      box-shadow: none;
+    }
+  }
+  .oung-logo {
+    margin: auto 0;
+    max-width: 500px;
+    width: 100%;
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+    animation: superOungDekWance 0.5s linear infinite;
+  }
+}
+
+@keyframes superOungDekWance {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+.about-wrapper {
+  margin: auto;
+  padding: 30px;
   width: 100%;
-  height: 100%;
+  max-width: 1200px;
+  min-height: 100px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  background-color: #d8d8d8;
+  color: black;
+
+  .about-content * {
+    line-height: 1.5;
+    font-weight: 400;
+  }
 }
 </style>

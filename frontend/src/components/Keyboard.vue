@@ -11,7 +11,7 @@
           class="keyboard-button"
           v-for="key in row"
           :style="{
-            width: key == 'space' ? '300px' : '50px',
+            width: `${(keyboardData.customWidth[key] ?? 0) + 50}px`,
             pointerEvents: key == '' ? 'none' : 'unset',
             backgroundColor: key == '' ? 'transparent' : '#353535',
           }"

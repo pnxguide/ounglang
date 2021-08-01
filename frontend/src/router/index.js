@@ -1,4 +1,8 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from 'vue-router';
 
 const routes = [
   {
@@ -6,10 +10,15 @@ const routes = [
     name: 'Home',
     component: () => import('../views/Home.vue'),
   },
+  {
+    path: '/editor',
+    name: 'Editor',
+    component: () => import('../views/Editor.vue'),
+  },
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes,
 });
 
