@@ -200,7 +200,14 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mo
             return BAD;
         }
 
-        printf("%c", var->value);
+        if (mode == PRINT_NUM) {
+            printf("%d\n", var->value);
+        }
+
+        else {
+            printf("%c", var->value);
+        }
+
         status_code = deallocate_var(var->identifier);
     }
 
@@ -221,7 +228,7 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mo
         }
 
         if (mode == PRINT_NUM) {
-            printf("%d", printed_char);
+            printf("%d\n", printed_char);
         }
 
         else {
