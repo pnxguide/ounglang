@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <regex.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -12,7 +13,7 @@
 enum token_t {
     ZERO,
     INPUT,
-    EQUAL,
+    PRINT_NUM,
     BYTE,
     ADD,
     SUB,
@@ -30,7 +31,7 @@ enum token_t {
 };
 
 enum token_t convert_oung_to_inst(const char oung[4]);
-int eval(enum token_t cmd[STMT_LIMIT], unsigned int limit);
+int execute(enum token_t cmd[STMT_LIMIT], unsigned int limit);
 
 int allocate_var(char* identifier, unsigned int id_len, char value);
 int deallocate_var(char* identifier);
@@ -40,13 +41,8 @@ struct variable_t* get_variable(const char* identifier);
 
 int oung_input(enum token_t cmd[STMT_LIMIT], unsigned int limit);
 int oung_init_var(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_add(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_subtract(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_multiply(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_divide(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_or(enum token_t cmd[STMT_LIMIT], unsigned int limit);
-int oung_and(enum token_t cmd[STMT_LIMIT], unsigned int limit);
+int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mode);
+int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mode);
 int oung_sleep(enum token_t cmd[STMT_LIMIT], unsigned int limit);
 
 void traverse_forward();
@@ -65,12 +61,23 @@ struct variable_t* var_list_tail = NULL;
 int main(int argv, char** argc) {
 
     if (argv != 2) {
-        printf("Proper command usage : oung [source_name]");
+        printf("Proper command usage : oung [oung_source_name]\n");
         return 1;
     }
 
     const char* file_name = argc[1];
+    size_t file_name_len = strlen(argc[1]);
+
+    if (strcmp(&file_name[file_name_len-5], ".oung")) {
+        printf("Proper source file extension : *.oung\n");
+        return 1;
+    }
+
     FILE* source = fopen(file_name, "r");
+    if (source == NULL) {
+        printf("The file %s does not exist!\n", file_name);
+        return 1;
+    }
 
     // scan each line
     char line[LINE_LIMIT];
@@ -88,7 +95,7 @@ int main(int argv, char** argc) {
             enum token_t inst = convert_oung_to_inst(ptr);
 
             if (inst == END) {
-                eval(cmd, cmd_pos);
+                execute(cmd, cmd_pos);
                 cmd_pos = 0;
             }
 
@@ -120,8 +127,8 @@ enum token_t convert_oung_to_inst(const char oung[4]) {
     return ERROR;
 }
 
-// evaluate the statement
-int eval(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
+// execute the statement
+int execute(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
     int status_code = GOOD;
 
     // good cmd
@@ -134,25 +141,16 @@ int eval(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                 status_code = oung_init_var(&cmd[1], limit-1);
                 break;
             case ADD:
-                status_code = oung_add(&cmd[1], limit-1);
-                break;
             case SUB:
-                status_code = oung_subtract(&cmd[1], limit-1);
-                break;
             case MUL:
-                status_code = oung_multiply(&cmd[1], limit-1);
-                break;
             case DIV:
-                status_code = oung_divide(&cmd[1], limit-1);
+            case OR:
+            case AND:
+                status_code = oung_eval(&cmd[1], limit-1, cmd[0]);
                 break;
             case PRINT:
-                status_code = oung_print(&cmd[1], limit-1);
-                break;
-            case OR:
-                status_code = oung_or(&cmd[1], limit-1);
-                break;
-            case AND:
-                status_code = oung_and(&cmd[1], limit-1);
+            case PRINT_NUM:
+                status_code = oung_print(&cmd[1], limit-1, cmd[0]);
                 break;
             default:
                 status_code = BAD;
@@ -167,7 +165,7 @@ int eval(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
     return status_code;
 }
 
-int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
+int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mode) {
     int status_code = GOOD;
 
     if (cmd[0] == VAR) {
@@ -222,7 +220,13 @@ int oung_print(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
             }
         }
 
-        printf("%c", printed_char);
+        if (mode == PRINT_NUM) {
+            printf("%d", printed_char);
+        }
+
+        else {
+            printf("%c", printed_char);
+        }
     }
 
     else {
@@ -446,7 +450,7 @@ int oung_input(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
     return status_code;
 }
 
-int oung_add(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
+int oung_eval(enum token_t cmd[STMT_LIMIT], unsigned int limit, enum token_t mode) {
     int status_code = GOOD;
 
     if (cmd[0] != VAR) {
@@ -476,6 +480,8 @@ int oung_add(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                 }
             }
         }
+
+        char r_value = 0;
 
         if (cmd[id_len*8+2] != SEP) {
             return BAD;
@@ -509,22 +515,16 @@ int oung_add(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                 }
             }
 
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value += r_value->value;
-
+            r_value = get_variable(r_operand)->value;
             status_code = deallocate_var(r_operand);
         }
 
         else {
-            char r_operand = 0;
-
             for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
+                r_value <<= 1;
                 
                 if (cmd[i] == ONE) {
-                    r_operand |= 1;
+                    r_value |= 1;
                 }
 
                 else if (cmd[i] != ZERO) {
@@ -532,490 +532,31 @@ int oung_add(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
                     break;
                 }
             }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value += r_operand;
-        }
-    }
-
-    return status_code;
-}
-
-int oung_subtract(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
-    int status_code = GOOD;
-
-    if (cmd[0] != VAR) {
-        status_code = BAD;
-    }
-
-    else {
-        int id_len = 0;
-        for (int i = 1; cmd[i] != VAR && i < limit; i += 8) {
-            id_len++;
         }
 
-        char l_operand[id_len];
-
-        for (int i = 0; i < id_len; i++) {
-            for (int j = 0; j < 8; j++) {
-                enum token_t cur_token = cmd[i*8+j+1];
-
-                l_operand[i] <<= 1;
-            
-                if (cur_token == ONE) {
-                    l_operand[i] |= 1;
-                }
-
-                else if (cur_token != ZERO) {
-                    return BAD;
-                }
-            }
-        }
-
-        if (cmd[id_len*8+2] != SEP) {
-            return BAD;
-        }
-
-        else if (cmd[id_len*8+3] == VAR) {
-            if (cmd[limit-1] != VAR) {
-                return BAD;
-            }
-
-            int r_id_len = 0;
-            for (int i = id_len*8+4; cmd[i] != VAR && i < limit; i += 8) {
-                r_id_len++;
-            }
-
-            char r_operand[r_id_len];
-
-            for (int i = 0; i < r_id_len; i++) {
-                for (int j = 0; j < 8; j++) {
-                    enum token_t cur_token = cmd[(id_len*8+4)+i*8+j];
-
-                    r_operand[i] <<= 1;
-                
-                    if (cur_token == ONE) {
-                        r_operand[i] |= 1;
-                    }
-
-                    else if (cur_token != ZERO) {
-                        return BAD;
-                    }
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value -= r_value->value;
-
-            status_code = deallocate_var(r_operand);
-        }
-
-        else {
-            char r_operand = 0;
-
-            for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
-                
-                if (cmd[i] == ONE) {
-                    r_operand |= 1;
-                }
-
-                else if (cmd[i] != ZERO) {
-                    status_code = BAD;
-                    break;
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value -= r_operand;
-        }
-    }
-
-    return status_code;
-}
-
-int oung_multiply(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
-    int status_code = GOOD;
-
-    if (cmd[0] != VAR) {
-        status_code = BAD;
-    }
-
-    else {
-        int id_len = 0;
-        for (int i = 1; cmd[i] != VAR && i < limit; i += 8) {
-            id_len++;
-        }
-
-        char l_operand[id_len];
-
-        for (int i = 0; i < id_len; i++) {
-            for (int j = 0; j < 8; j++) {
-                enum token_t cur_token = cmd[i*8+j+1];
-
-                l_operand[i] <<= 1;
-            
-                if (cur_token == ONE) {
-                    l_operand[i] |= 1;
-                }
-
-                else if (cur_token != ZERO) {
-                    return BAD;
-                }
-            }
-        }
-
-        if (cmd[id_len*8+2] != SEP) {
-            return BAD;
-        }
-
-        else if (cmd[id_len*8+3] == VAR) {
-            if (cmd[limit-1] != VAR) {
-                return BAD;
-            }
-
-            int r_id_len = 0;
-            for (int i = id_len*8+4; cmd[i] != VAR && i < limit; i += 8) {
-                r_id_len++;
-            }
-
-            char r_operand[r_id_len];
-
-            for (int i = 0; i < r_id_len; i++) {
-                for (int j = 0; j < 8; j++) {
-                    enum token_t cur_token = cmd[(id_len*8+4)+i*8+j];
-
-                    r_operand[i] <<= 1;
-                
-                    if (cur_token == ONE) {
-                        r_operand[i] |= 1;
-                    }
-
-                    else if (cur_token != ZERO) {
-                        return BAD;
-                    }
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value *= r_value->value;
-
-            status_code = deallocate_var(r_operand);
-        }
-
-        else {
-            char r_operand = 0;
-
-            for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
-                
-                if (cmd[i] == ONE) {
-                    r_operand |= 1;
-                }
-
-                else if (cmd[i] != ZERO) {
-                    status_code = BAD;
-                    break;
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value *= r_operand;
-        }
-    }
-
-    return status_code;
-}
-
-int oung_divide(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
-    int status_code = GOOD;
-
-    if (cmd[0] != VAR) {
-        status_code = BAD;
-    }
-
-    else {
-        int id_len = 0;
-        for (int i = 1; cmd[i] != VAR && i < limit; i += 8) {
-            id_len++;
-        }
-
-        char l_operand[id_len];
-
-        for (int i = 0; i < id_len; i++) {
-            for (int j = 0; j < 8; j++) {
-                enum token_t cur_token = cmd[i*8+j+1];
-
-                l_operand[i] <<= 1;
-            
-                if (cur_token == ONE) {
-                    l_operand[i] |= 1;
-                }
-
-                else if (cur_token != ZERO) {
-                    return BAD;
-                }
-            }
-        }
-
-        if (cmd[id_len*8+2] != SEP) {
-            return BAD;
-        }
-
-        else if (cmd[id_len*8+3] == VAR) {
-            if (cmd[limit-1] != VAR) {
-                return BAD;
-            }
-
-            int r_id_len = 0;
-            for (int i = id_len*8+4; cmd[i] != VAR && i < limit; i += 8) {
-                r_id_len++;
-            }
-
-            char r_operand[r_id_len];
-
-            for (int i = 0; i < r_id_len; i++) {
-                for (int j = 0; j < 8; j++) {
-                    enum token_t cur_token = cmd[(id_len*8+4)+i*8+j];
-
-                    r_operand[i] <<= 1;
-                
-                    if (cur_token == ONE) {
-                        r_operand[i] |= 1;
-                    }
-
-                    else if (cur_token != ZERO) {
-                        return BAD;
-                    }
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value /= r_value->value;
-
-            status_code = deallocate_var(r_operand);
-        }
-
-        else {
-            char r_operand = 0;
-
-            for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
-                
-                if (cmd[i] == ONE) {
-                    r_operand |= 1;
-                }
-
-                else if (cmd[i] != ZERO) {
-                    status_code = BAD;
-                    break;
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value /= r_operand;
-        }
-    }
-
-    return status_code;
-}
-
-int oung_or(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
-    int status_code = GOOD;
-
-    if (cmd[0] != VAR) {
-        status_code = BAD;
-    }
-
-    else {
-        int id_len = 0;
-        for (int i = 1; cmd[i] != VAR && i < limit; i += 8) {
-            id_len++;
-        }
-
-        char l_operand[id_len];
-
-        for (int i = 0; i < id_len; i++) {
-            for (int j = 0; j < 8; j++) {
-                enum token_t cur_token = cmd[i*8+j+1];
-
-                l_operand[i] <<= 1;
-            
-                if (cur_token == ONE) {
-                    l_operand[i] |= 1;
-                }
-
-                else if (cur_token != ZERO) {
-                    return BAD;
-                }
-            }
-        }
-
-        if (cmd[id_len*8+2] != SEP) {
-            return BAD;
-        }
-
-        else if (cmd[id_len*8+3] == VAR) {
-            if (cmd[limit-1] != VAR) {
-                return BAD;
-            }
-
-            int r_id_len = 0;
-            for (int i = id_len*8+4; cmd[i] != VAR && i < limit; i += 8) {
-                r_id_len++;
-            }
-
-            char r_operand[r_id_len];
-
-            for (int i = 0; i < r_id_len; i++) {
-                for (int j = 0; j < 8; j++) {
-                    enum token_t cur_token = cmd[(id_len*8+4)+i*8+j];
-
-                    r_operand[i] <<= 1;
-                
-                    if (cur_token == ONE) {
-                        r_operand[i] |= 1;
-                    }
-
-                    else if (cur_token != ZERO) {
-                        return BAD;
-                    }
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value |= r_value->value;
-
-            status_code = deallocate_var(r_operand);
-        }
-
-        else {
-            char r_operand = 0;
-
-            for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
-                
-                if (cmd[i] == ONE) {
-                    r_operand |= 1;
-                }
-
-                else if (cmd[i] != ZERO) {
-                    status_code = BAD;
-                    break;
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value |= r_operand;
-        }
-    }
-
-    return status_code;
-}
-
-int oung_and(enum token_t cmd[STMT_LIMIT], unsigned int limit) {
-    int status_code = GOOD;
-
-    if (cmd[0] != VAR) {
-        status_code = BAD;
-    }
-
-    else {
-        int id_len = 0;
-        for (int i = 1; cmd[i] != VAR && i < limit; i += 8) {
-            id_len++;
-        }
-
-        char l_operand[id_len];
-
-        for (int i = 0; i < id_len; i++) {
-            for (int j = 0; j < 8; j++) {
-                enum token_t cur_token = cmd[i*8+j+1];
-
-                l_operand[i] <<= 1;
-            
-                if (cur_token == ONE) {
-                    l_operand[i] |= 1;
-                }
-
-                else if (cur_token != ZERO) {
-                    return BAD;
-                }
-            }
-        }
-
-        if (cmd[id_len*8+2] != SEP) {
-            return BAD;
-        }
-
-        else if (cmd[id_len*8+3] == VAR) {
-            if (cmd[limit-1] != VAR) {
-                return BAD;
-            }
-
-            int r_id_len = 0;
-            for (int i = id_len*8+4; cmd[i] != VAR && i < limit; i += 8) {
-                r_id_len++;
-            }
-
-            char r_operand[r_id_len];
-
-            for (int i = 0; i < r_id_len; i++) {
-                for (int j = 0; j < 8; j++) {
-                    enum token_t cur_token = cmd[(id_len*8+4)+i*8+j];
-
-                    r_operand[i] <<= 1;
-                
-                    if (cur_token == ONE) {
-                        r_operand[i] |= 1;
-                    }
-
-                    else if (cur_token != ZERO) {
-                        return BAD;
-                    }
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-            struct variable_t* r_value = get_variable(r_operand);
-
-            l_value->value &= r_value->value;
-
-            status_code = deallocate_var(r_operand);
-        }
-
-        else {
-            char r_operand = 0;
-
-            for (int i = id_len*8+3; i < limit; i++) {
-                r_operand <<= 1;
-                
-                if (cmd[i] == ONE) {
-                    r_operand |= 1;
-                }
-
-                else if (cmd[i] != ZERO) {
-                    status_code = BAD;
-                    break;
-                }
-            }
-
-            struct variable_t* l_value = get_variable(l_operand);
-
-            l_value->value &= r_operand;
+        struct variable_t* l_var = get_variable(l_operand);
+        
+        switch (mode) {
+            case ADD:
+                l_var->value += r_value;
+                break;
+            case SUB:
+                l_var->value -= r_value;
+                break;
+            case MUL:
+                l_var->value *= r_value;
+                break;
+            case DIV:
+                l_var->value /= r_value;
+                break;
+            case AND:
+                l_var->value &= r_value;
+                break;
+            case OR:
+                l_var->value |= r_value;
+                break;
+            default:
+                status_code = BAD;
         }
     }
 
