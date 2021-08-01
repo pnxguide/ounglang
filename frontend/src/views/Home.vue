@@ -18,24 +18,32 @@
     <div class="about-wrapper">
       <div class="about-content">
         <p style="margin: 0">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Rem, optio
-          ullam! Eum praesentium, velit dolore labore, sed perspiciatis cumque
-          dicta harum ipsa architecto inventore! At corporis qui commodi laborum
-          aspernatur. Aliquid atque nam voluptatum molestias animi sint esse cum
-          placeat impedit voluptates ut, reprehenderit tempore ad nobis,
-          perspiciatis sed expedita. Incidunt quidem, quis quia corporis qui
-          sunt nemo eum vitae! Recusandae doloribus natus explicabo alias in,
-          debitis similique? Corrupti, voluptates enim perspiciatis cumque
-          beatae perferendis quo! Eveniet minima exercitationem expedita
-          doloribus doloremque, in aliquid perspiciatis, et laboriosam
-          accusamus, illo consequuntur? Natus eaque temporibus, laboriosam fuga
-          exercitationem quas, assumenda repudiandae id, asperiores delectus
-          velit eveniet ipsum corrupti omnis ratione illum. Rerum obcaecati
-          tenetur quae dignissimos magni saepe impedit perferendis nam ducimus.
-          Perspiciatis amet laudantium quis, similique suscipit esse
-          reprehenderit doloremque facere. Aperiam nihil distinctio quia!
-          Ratione distinctio repellat molestiae qui. Voluptates repellat nihil
-          nam nostrum beatae libero quibusdam explicabo cumque iste!
+          oung OUNG OUNG OUNG oung OUNG OUNG OUNG oung OUNG OUNG oung oung OUNG
+          oung OUNG oung OUNG OUNG oung OUNG OUNG oung oung oung OUNG OUNG oung
+          oung oung OUNG OUNG oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung OUNG
+          OUNG oung OUNG OUNG oung OUNG oung OUNG OUNG oung oung OUNG oung OUNG
+          oung oung OUNG oung oung oung oung oung oung OUNG OUNG OUNG oung OUNG
+          oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung oung OUNG oung
+          oung oung oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung OUNG
+          OUNG OUNG oung OUNG oung OUNG oung OUNG OUNG oung OUNG OUNG OUNG oung
+          oung OUNG OUNG oung oung OUNG OUNG OUNG oung OUNG OUNG oung OUNG OUNG
+          oung oung oung OUNG OUNG oung oung oung oung OUNG oung OUNG OUNG oung
+          OUNG OUNG OUNG oung oung OUNG OUNG oung oung OUNG OUNG OUNG oung oung
+          OUNG oung oung oung oung OUNG oung oung oung oung OUNG OUNG oung OUNG
+          oung OUNG OUNG oung OUNG OUNG oung oung oung OUNG OUNG oung oung OUNG
+          oung OUNG oung OUNG OUNG OUNG oung OUNG oung oung oung oung OUNG oung
+          oung OUNG OUNG OUNG oung OUNG OUNG OUNG oung oung OUNG OUNG oung oung
+          OUNG oung oung oung oung oung oung OUNG OUNG oung oung OUNG OUNG OUNG
+          oung OUNG OUNG oung OUNG OUNG OUNG OUNG oung oung OUNG oung oung oung
+          oung oung oung OUNG OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung
+          OUNG OUNG OUNG OUNG oung oung OUNG oung oung oung oung oung oung OUNG
+          OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung OUNG oung oung oung
+          oung OUNG OUNG oung oung OUNG oung OUNG oung oung OUNG oung oung oung
+          oung oung oung OUNG OUNG oung oung OUNG oung OUNG oung OUNG OUNG oung
+          oung OUNG oung oung oung OUNG OUNG oung OUNG oung oung OUNG oung OUNG
+          OUNG OUNG oung OUNG oung oung oung OUNG OUNG oung OUNG OUNG OUNG OUNG
+          oung OUNG OUNG OUNG oung oung OUNG OUNG oung oung OUNG oung oung oung
+          oung OUNG
         </p>
       </div>
     </div>

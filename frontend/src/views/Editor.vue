@@ -24,6 +24,7 @@ import { inject, onBeforeUnmount, onMounted } from '@vue/runtime-core';
 import keyboard from '@/components/Keyboard.vue';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import oungSound from '@/assets/audios/editor.mp3';
 
 import 'xterm/css/xterm.css';
 
@@ -34,11 +35,8 @@ export default {
     const terminalRef = ref(null);
     const keyboardOpened = ref(false);
     const axios = inject('axios');
-    const oungAudio = new Audio(
-      'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3',
-    );
+    const oungAudio = new Audio(oungSound);
     oungAudio.volume = 0.3;
-    // oungAudio.play();
 
     let editor = null;
 
