@@ -117,13 +117,19 @@ enum token_t convert_oung_to_inst(const char oung[4]) {
         "OUng", "OUnG", "OUNg", "OUNG"
     };
 
-    for (int i = 0; i < 16; i++) {
-        if (!strcmp(oung, oungs[i])) {
-            return (enum token_t)i;
-        }
-    }
+    // change to trie search
+    return ((oung[0] == 'O') * 8) +
+        ((oung[1] == 'U') * 4) +
+        ((oung[2] == 'N') * 2) +
+        ((oung[3] == 'G') * 1);
 
-    return ERROR;
+    // for (int i = 0; i < 16; i++) {
+    //     if (!strcmp(oung, oungs[i])) {
+    //         return (enum token_t)i;
+    //     }
+    // }
+
+    // return ERROR;
 }
 
 // execute the statement
